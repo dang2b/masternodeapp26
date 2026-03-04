@@ -18,3 +18,15 @@ jobs:
 
             - name: run tests
               run: ls -lah
+    build:
+        name: build
+        runs-on: ubuntu-latest
+        needs: test
+        steps:
+            - name: checkout
+              uses: actions/checkout@v4
+            
+            - name: build image
+              run: docker build -t $IMAGE_NAME .
+            - name: push image
+              run: echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u
