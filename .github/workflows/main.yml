@@ -10,39 +10,58 @@ env:
   REPO_URL: ghcr.io
 
 jobs:
-    test:
-        name: test
-        runs-on: ubuntu-latest
-        steps: 
-            - name: checkout
-              uses: actions/checkout@v4
+  test:
+    name: test
+    runs-on: ubuntu-latest
+    steps: 
+      - name: checkout
+        uses: actions/checkout@v4
 
-            - name: run tests
-              run: ls -lah
-    build:
-        name: build and push
-        runs-on: ubuntu-latest
-        needs: test
-        steps:
-            - name: checkout
-              uses: actions/checkout@v4
-            
-            - name: build image
-              run: docker build -t $IMAGE_NAME .
-            - name: run image
-              run: docker run -d -p 3000:3000 $IMAGE_NAME
-            - name: tag current image on ghcr
-              run: docker tag $IMAGE_NAME $REPO_URL/${{ github.actor }}/$IMAGE_NAME:1.0 
-            - name: tag latest image on ghcr 
-              run: docker tag $IMAGE_NAME $REPO_URL/${{ github.actor }}/$IMAGE_NAME:latest
-            
-            - name: connexion GHCR
-              uses: docker/login-action@v2
-              with:
-                registry: ${{ env.REPO_URL }}
-                username: ${{ github.actor }}
-                password: ${{ secrets.TOKENCICD }}
-            - name: push current image on ghcr 
-              run: docker push $REPO_URL/${{ github.actor }}/$IMAGE_NAME:1.0
-            - name: push latest image on ghcr
-              run: docker push $REPO_URL/${{ github.actor }}/$IMAGE_NAME:latest
+      - name: run tests
+        run: ls -lah
+  build:
+    name: build and push
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+      
+      - name: build image
+        run: docker build -t $IMAGE_NAME .
+      - name: run image
+        run: docker run -d -p 3000:3000 $IMAGE_NAME
+      - name: tag current image on ghcr
+        run: docker tag $IMAGE_NAME $REPO_URL/${{ github.actor }}/$IMAGE_NAME:1.0 
+      - name: tag latest image on ghcr 
+        run: docker tag $IMAGE_NAME $REPO_URL/${{ github.actor }}/$IMAGE_NAME:latest
+      
+      - name: connexion GHCR
+        uses: docker/login-action@v2
+        with:
+          registry: ${{ env.REPO_URL }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.TOKENCICD }}
+      - name: push current image on ghcr 
+        run: docker push $REPO_URL/${{ github.actor }}/$IMAGE_NAME:1.0
+      - name: push latest image on ghcr
+        run: docker push $REPO_URL/${{ github.actor }}/$IMAGE_NAME:latest
+  
+  deploy:
+      name: deploy
+      runs-on: ubuntu-latest
+      needs: build
+      steps:
+        - name: connect to ghcr
+          uses: docker/login-action@v2
+          with:
+            registry: ${{ env.REPO_URL }}
+            username: ${{ github.actor }}
+            password: ${{ secrets.TOKENCICD }}
+        
+        - name: pull image
+          run: docker pull $REPO_URL/${{ github.actor }}/$IMAGE_NAME:latest
+        
+        - name: run image
+          run: docker run -d -p 3000:3000 --name $IMAGE_NAME $REPO_URL/${{ github.actor }}/$IMAGE_NAME:latest
+        
