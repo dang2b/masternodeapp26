@@ -39,7 +39,7 @@ jobs:
             - name: connexion GHCR
               uses: docker/login-action@v2
               with:
-                registry: $REPO_URL
+                registry: ${{ env.REPO_URL }}
                 username: ${{ github.actor }}
                 password: ${{ secrets.TOKENCICD }}
             - name: push current image on ghcr 
