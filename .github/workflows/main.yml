@@ -28,5 +28,9 @@ jobs:
             
             - name: build image
               run: docker build -t $IMAGE_NAME .
+            - name: run image
+              run: docker run -d -p 3000:3000 $IMAGE_NAME
             - name: push image
               run: echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u
+            - name: test image
+              run: ls -lah
