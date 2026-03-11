@@ -52,6 +52,17 @@ jobs:
       runs-on: ubuntu-latest
       needs: build
       steps:
+        - name: connect to AWS VPS
+          uses: appleboy/ssh-action@master
+          with:
+            host: ${{ secrets.HOST }}
+            username: ${{ secrets.USERNAME }}
+            key: ${{ secrets.KEY }}
+            port: ${{ secrets.PORT }}
+            script: |
+              docker --version
+            #  docker pull $REPO_URL/${{ github.actor }}/$IMAGE_NAME:latest
+            #  docker run -d -p 3000:3000 --name $IMAGE_NAME $REPO_URL/${{ github.actor }}/$IMAGE_NAME:latest
         - name: connect to ghcr
           uses: docker/login-action@v2
           with:
