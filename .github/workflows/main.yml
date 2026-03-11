@@ -59,9 +59,13 @@ jobs:
             username: ${{ secrets.USERNAME }}
             key: ${{ secrets.KEY }}
             port: ${{ secrets.PORT }}
+            envs: REPO_URL,IMAGE_NAME
             script: |
               docker --version
               echo ${{secrets.TOKENCICD}} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+              docker stop $IMAGE_NAME || true
+              docker rm $IMAGE_NAME || true
               docker pull $REPO_URL/${{ github.actor }}/$IMAGE_NAME:latest
               docker run -d -p 3000:3000 --name $IMAGE_NAME $REPO_URL/${{ github.actor }}/$IMAGE_NAME:latest
+              sleep 3
               curl localhost:3000
