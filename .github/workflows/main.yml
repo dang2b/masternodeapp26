@@ -6,7 +6,8 @@ on:
       - main
 
 env:
-  IMAGE_NAME: ghcr.io/${{ github.repository }}:app
+  IMAGE_NAME: masterapp
+  REPO_URL: ghcr.io
 
 jobs:
     test:
@@ -19,7 +20,7 @@ jobs:
             - name: run tests
               run: ls -lah
     build:
-        name: build
+        name: build and push
         runs-on: ubuntu-latest
         needs: test
         steps:
@@ -30,7 +31,18 @@ jobs:
               run: docker build -t $IMAGE_NAME .
             - name: run image
               run: docker run -d -p 3000:3000 $IMAGE_NAME
-            #- name: push image
-            #  run: echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u
-            - name: test image
-              run: ls -lah
+            - name: tag current image on ghcr
+              run: docker tag $IMAGE_NAME $REPO_URL/${{ github.actor }}/$IMAGE_NAME:1.0 
+            - name: tag latest image on ghcr 
+              run: docker tag $IMAGE_NAME $REPO_URL/${{ github.actor }}/$IMAGE_NAME:latest
+            
+            - name: connexion GHCR
+              uses: docker/login-action@v2
+              with:
+                registry: $REPO_URL
+                username: ${{ github.actor }}
+                password: ${{ secrets.TOKENCICD }}
+            - name: push current image on ghcr 
+              run: docker push $REPO_URL/${{ github.actor }}/$IMAGE_NAME:1.0
+            - name: push latest image on ghcr
+              run: docker push $REPO_URL/${{ github.actor }}/$IMAGE_NAME:latest
